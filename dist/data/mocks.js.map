@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/data/mocks.js"],"names":["mocks","String"],"mappings":";;;;;AAAA,IAAMA,QAAQ;AACZC,UAAQ;AAAA,WAAM,WAAN;AAAA;AADI,CAAd;;kBAIeD,K","file":"mocks.js","sourcesContent":["const mocks = {\n  String: () => 'It works!',\n};\n\nexport default mocks;\n"]}

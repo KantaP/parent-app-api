@@ -40,7 +40,15 @@ module.exports = function(sequelize, DataTypes) {
         relative: {
             type: DataTypes.STRING(20),
             allowNull: false
-        }
+        },
+        // token: {
+        //     type: DataTypes.STRING(),
+        //     allowNull: false
+        // },
+        // push_token: {
+        //     type: DataTypes.STRING(),
+        //     allowNull: false
+        // }
     }, {
         tableName: 'tb_parent',
         timestamps: false
