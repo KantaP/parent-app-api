@@ -51,15 +51,15 @@ var jwt = require('jsonwebtoken');
 var session = require('express-session');
 var flash = require('connect-flash');
 var crypto = require('crypto');
-
+var axios = require('axios');
+var querystring = require('querystring');
 // const privateJWT = crypto.createHash('md5').update(config.PARENT_APP_TOKEN).digest('hex')
 require('./auth.js');
 
 var admin = require("firebase-admin");
 var serviceAccount = require("./driverapp-1470129684507-firebase-adminsdk-qd3ut-0b2e7204c7.json");
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://driverapp-1470129684507.firebaseio.com/"
+    credential: admin.credential.cert(serviceAccount)
 });
 
 var BearerStrategy = require('passport-http-bearer').Strategy;
@@ -129,14 +129,14 @@ graphQLServer.use('/graphql', _passport2.default.authenticate('bearer', { sessio
     };
 }));
 
-graphQLServer.use('/graphiql', (0, _apolloServerExpress.graphiqlExpress)({ endpointURL: '/graphql' }));
+// graphQLServer.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
 graphQLServer.use(_bodyParser2.default.json()); // support json encoded bodies
 graphQLServer.use(_bodyParser2.default.urlencoded({ extended: false }));
 
 graphQLServer.post('/sendSMS', _passport2.default.authenticate('bearer', { session: false }), function (req, res) {
     if (req.user == null) {
-        res.status(400).send({ message: 'Unauthorize' });
+        res.status(401).send({ message: 'Unauthorize' });
     } else {
         var body = {
             to: req.body.to.split(','),
@@ -164,32 +164,45 @@ graphQLServer.post('/sendSMS', _passport2.default.authenticate('bearer', { sessi
 });
 
 graphQLServer.post('/login', _passport2.default.authenticate('local', { session: false, failureFlash: true }), function (req, res) {
-    var token = jwt.sign({ id: req.user.parent_id, auth: true, mutate: ['ALL'], query: ['ALL'] }, _config2.default.PARENT_APP_TOKEN, { expiresIn: 3600 });
+    var token = jwt.sign({
+        id: req.user.id,
+        auth: true,
+        mutate: ['ALL'],
+        query: ['ALL'],
+        databases: req.user.databases,
+        email: req.user.email
+    }, _config2.default.PARENT_APP_TOKEN, { expiresIn: 3600 });
+    var _req$user = req.user,
+        id = _req$user.id,
+        email = _req$user.email,
+        phone = _req$user.phone;
+
     res.send({
         token: token,
-        user: req.user
+        user: { id: id, email: email, phone: phone }
     });
 });
 
 graphQLServer.post('/prepareEmailVerify', function () {
     var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(req, res) {
-        var parent, token;
+        var shareDB, parent, token;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
                     case 0:
-                        _context.next = 2;
-                        return _connector.Parent.find({
+                        shareDB = (0, _connector.sequelizeInitial)('ecm_share');
+                        _context.next = 3;
+                        return shareDB.ParentGlobal.find({
                             where: {
                                 email: req.body.email
                             }
                         });
 
-                    case 2:
+                    case 3:
                         parent = _context.sent;
 
                         if (parent != null) {
-                            token = jwt.sign({ id: parent.get().parent_id, auth: false, mutate: ['UPDATE_PASSWORD'], query: ['SELECT_PARENT'] }, _config2.default.PARENT_APP_TOKEN, { expiresIn: 3600 });
+                            token = jwt.sign({ id: parent.get().id, auth: false, mutate: ['UPDATE_PASSWORD'], query: ['SELECT_PARENT_GLOBAL'] }, _config2.default.PARENT_APP_TOKEN, { expiresIn: 3600 });
 
                             res.send({
                                 token: token
@@ -200,7 +213,7 @@ graphQLServer.post('/prepareEmailVerify', function () {
                             });
                         }
 
-                    case 4:
+                    case 5:
                     case 'end':
                         return _context.stop();
                 }
@@ -214,9 +227,58 @@ graphQLServer.post('/prepareEmailVerify', function () {
 }());
 
 graphQLServer.get('/testPush', function () {
-    // var token = "cvPJKYZvBoY:APA91bF4WN3q-0_DwrpNLoAmZwsQSBmb5N0sjP5-G-dp18TK0AdwY_zNDiOQPIccp_URnuLOi2Kv8hDLfA1HLgQTtlJh63yiiBazB9gbT7FGSEw_gKGo2ttHGmsHZHt5JTyKIR7WfH2F"
-
+    var registrationToken = "f0flvIMd2mc:APA91bEjaAmX-GRxu3W1WSyLrjkwLYoD34OD4Pzt4LnWWBCnh1ODvMEdc1fHcxiBKrO5cW-SnIs9vBnrAyUrg0ToMskUs4RrMb7T4Vu9DYVFL5MUmeOWQvu4X7YhSfM6WJPq_VxeQ1nz";
+    var payload = {
+        notification: {
+            title: 'School Journey App',
+            body: 'test api'
+        },
+        data: {
+            score: "850",
+            time: "2:45"
+        }
+    };
+    admin.messaging().sendToDevice(registrationToken, payload).then(function (response) {
+        // See the MessagingDevicesResponse reference documentation for
+        // the contents of response.
+        console.log("Successfully sent message:", response);
+    }).catch(function (error) {
+        console.log("Error sending message:", error);
+    });
 });
+
+graphQLServer.get('/companycode/:app_code', function () {
+    var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(req, res) {
+        var api_url, query_string, companyCode, companyData;
+        return _regenerator2.default.wrap(function _callee2$(_context2) {
+            while (1) {
+                switch (_context2.prev = _context2.next) {
+                    case 0:
+                        api_url = "http://journeybug.local.ppcnseo.com/";
+                        query_string = "lib/api/?company=1";
+                        companyCode = req.params.app_code;
+                        _context2.next = 5;
+                        return axios.post(api_url + query_string, querystring.stringify({ code: companyCode }));
+
+                    case 5:
+                        companyData = _context2.sent;
+
+                        console.log(companyData);
+
+                    case 7:
+                    case 'end':
+                        return _context2.stop();
+                }
+            }
+        }, _callee2, undefined);
+    }));
+
+    return function (_x3, _x4) {
+        return _ref3.apply(this, arguments);
+    };
+}());
+
+graphQLServer.post('/passOnDevices', function () {});
 
 // graphQLServer.get('/refreshJWT', passport.authenticate('bearer', { session: false }), (req, res) => {
 //     Parent.find({

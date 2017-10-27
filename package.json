@@ -20,6 +20,7 @@
     "license": "MIT",
     "dependencies": {
         "apollo-server-express": "^1.0.2",
+        "axios": "^0.16.2",
         "body-parser": "^1.17.2",
         "connect-flash": "^0.1.1",
         "cors": "^2.8.4",

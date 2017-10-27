@@ -21,7 +21,6 @@ const typeDefs = `
     }
 
     input CreateParentPushTokenInput {
-        email: String!
         push_token: String!
     }
     

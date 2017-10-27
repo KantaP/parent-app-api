@@ -216,6 +216,9 @@ const resolvers = {
                             }
                         },
                     })
+                    if (quote == null) {
+                        continue;
+                    }
                     var jobs = await schoolDB.JobPassengers.findAll({
                         attributes: ['quote_id', 'point_id', 'pickup', 'passenger_id', 'j_id'],
                         where: {
@@ -225,6 +228,9 @@ const resolvers = {
                             passenger_id: passengerData[i].passenger_id
                         }
                     })
+                    if (jobs == null) {
+                        continue
+                    }
                     globalDB = schoolDB
                     var jobData = jobs.map((job) => job.get())
                     var jobDataPickUp = jobData.filter((job) => job.pickup == 1)
@@ -329,7 +335,7 @@ const resolvers = {
             try {
                 var parentTokenCreate = await shareDB.ParentToken.create({
                     push_token: args.input['push_token'],
-                    id: request.user.account_id
+                    parent_id: request.user.id
                 })
                 return { msg: 'New token has been added', status: true }
             } catch (err) {

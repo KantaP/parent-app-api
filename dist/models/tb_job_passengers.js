@@ -26,6 +26,10 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.INTEGER(4),
             allowNull: false
         },
+        side: {
+            type: DataTypes.INTEGER(1),
+            allowNull: false
+        },
         status: {
             type: DataTypes.INTEGER(4),
             allowNull: false
@@ -39,6 +43,18 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false
         },
         force_login: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
+        },
+        log_id: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
+        },
+        j_id: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
+        },
+        movement_order: {
             type: DataTypes.INTEGER(11),
             allowNull: false
         }

@@ -13,7 +13,8 @@ const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const flash = require('connect-flash');
 const crypto = require('crypto');
-
+const axios = require('axios');
+const querystring = require('querystring');
 // const privateJWT = crypto.createHash('md5').update(config.PARENT_APP_TOKEN).digest('hex')
 require('./auth.js');
 
@@ -93,7 +94,7 @@ graphQLServer.use(bodyParser.urlencoded({ extended: false }));
 
 graphQLServer.post('/sendSMS', passport.authenticate('bearer', { session: false }), (req, res) => {
     if (req.user == null) {
-        res.status(400).send({ message: 'Unauthorize' })
+        res.status(401).send({ message: 'Unauthorize' })
     } else {
         var body = {
             to: req.body.to.split(','),
@@ -177,6 +178,21 @@ graphQLServer.get('/testPush', () => {
         .catch(function(error) {
             console.log("Error sending message:", error);
         });
+})
+
+graphQLServer.get('/companycode/:app_code', async(req, res) => {
+    let api_url = "http://journeybug.local.ppcnseo.com/"
+    let query_string = "lib/api/?company=1"
+    let companyCode = req.params.app_code
+
+    let companyData = await axios.post(api_url + query_string, querystring.stringify({ code: companyCode }))
+    console.log(companyData)
+
+
+})
+
+graphQLServer.post('/passOnDevices', () => {
+
 })
 
 
