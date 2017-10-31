@@ -32,7 +32,22 @@ passport.use('local', new LocalStrategy(
                     parent_id: parentGlobal.get().id
                 }
             })
-            var result = Object.assign({}, parentGlobal.get(), { databases: parentDetail.map((item) => item.get().database_name) })
+            var databases = parentDetail.map((item) => item.get().database_name)
+            var companiesLogo = []
+            for (let i = 0; i < databases.length; i++) {
+                var DB = sequelizeInitial(databases[i]);
+                var companyLogo = await DB.Account.find({
+                    attributes: ['name', 'company_logo'],
+                    where: {
+                        email: parentGlobal.get().email
+                    }
+                })
+                companiesLogo.push({
+                    companyName: companyLogo.get().name,
+                    logo: companyLogo.get().company_logo
+                })
+            }
+            var result = Object.assign({}, parentGlobal.get(), { databases: databases, companiesLogo: companiesLogo })
             return done(null, result)
         } else {
             return done(null, null, { message: 'Invalid username or password.' })

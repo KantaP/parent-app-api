@@ -224,6 +224,10 @@ module.exports = function(sequelize, DataTypes) {
         colour: {
             type: DataTypes.STRING(7),
             allowNull: false
+        },
+        company_logo: {
+            type: DataTypes.STRING(),
+            allowNull: false
         }
     }, {
         tableName: 'tb_accounts',
