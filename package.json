@@ -27,6 +27,7 @@
         "express": "4.13.4",
         "express-graphql": "^0.6.11",
         "express-session": "^1.15.5",
+        "fcm-node": "^1.2.0",
         "firebase-admin": "^5.4.1",
         "graphql-errors": "^2.1.0",
         "graphql-tools": "^1.0.0",

@@ -226,24 +226,29 @@ graphQLServer.post('/prepareEmailVerify', function () {
     };
 }());
 
-graphQLServer.get('/testPush', function () {
-    var registrationToken = "f0flvIMd2mc:APA91bEjaAmX-GRxu3W1WSyLrjkwLYoD34OD4Pzt4LnWWBCnh1ODvMEdc1fHcxiBKrO5cW-SnIs9vBnrAyUrg0ToMskUs4RrMb7T4Vu9DYVFL5MUmeOWQvu4X7YhSfM6WJPq_VxeQ1nz";
+graphQLServer.get('/testPush/:token', function (req, res) {
+
+    // var registrationToken = "f0flvIMd2mc:APA91bEjaAmX-GRxu3W1WSyLrjkwLYoD34OD4Pzt4LnWWBCnh1ODvMEdc1fHcxiBKrO5cW-SnIs9vBnrAyUrg0ToMskUs4RrMb7T4Vu9DYVFL5MUmeOWQvu4X7YhSfM6WJPq_VxeQ1nz"
+    var registrationToken = req.params.token;
     var payload = {
-        notification: {
-            title: 'School Journey App',
-            body: 'test api'
-        },
         data: {
-            score: "850",
-            time: "2:45"
+            title: "AUX Scrum",
+            message: "Scrum: Daily touchbase @ 10am Please be on time so we can cover everything on the agenda.",
+            actions: JSON.stringify([{ icon: "emailGuests", title: "EMAIL GUESTS", callback: "emailGuests", foreground: false, inline: true, replyLabel: "Enter your reply here" }, { icon: "snooze", title: "SNOOZE", callback: "snooze", foreground: false }])
         }
     };
-    admin.messaging().sendToDevice(registrationToken, payload).then(function (response) {
+    admin.messaging().sendToDevice(registrationToken, payload, {
+        contentAvailable: true,
+        priority: "normal",
+        restrictedPackageName: "com.ecoachmanager.parentapp"
+    }).then(function (response) {
         // See the MessagingDevicesResponse reference documentation for
         // the contents of response.
         console.log("Successfully sent message:", response);
+        res.send(response);
     }).catch(function (error) {
         console.log("Error sending message:", error);
+        res.send(error);
     });
 });
 
