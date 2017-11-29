@@ -1,6 +1,5 @@
 import express from 'express';
 const graphqlHTTP = require('express-graphql');
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import bodyParser from 'body-parser';
 import schema from './data/schema';
 import cors from 'cors';
@@ -87,10 +86,9 @@ graphQLServer.use('/graphql', passport.authenticate('bearer', { session: false }
     };
 }));
 
-// graphQLServer.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
 graphQLServer.use(bodyParser.json()); // support json encoded bodies
-graphQLServer.use(bodyParser.urlencoded({ extended: false }));
+graphQLServer.use(bodyParser.urlencoded({ extended: true }));
 
 graphQLServer.post('/sendSMS', passport.authenticate('bearer', { session: false }), (req, res) => {
     if (req.user == null) {
@@ -131,10 +129,10 @@ graphQLServer.post('/login', passport.authenticate('local', { session: false, fa
         databases: req.user.databases,
         email: req.user.email
     }, config.PARENT_APP_TOKEN, { expiresIn: 3600 })
-    var { id, email, phone } = req.user
+    var { id, email, phone, companiesLogo } = req.user
     res.send({
         token: token,
-        user: { id, email, phone }
+        user: { id, email, phone, companiesLogo }
     })
 });
 
@@ -201,7 +199,44 @@ graphQLServer.get('/companycode/:app_code', async(req, res) => {
 
 })
 
-graphQLServer.post('/passOnDevices', () => {
+graphQLServer.post('/passOnDevices', async(req, res) => {
+    var shareDB = sequelizeInitial('ecm_share')
+    var parent = await shareDB.ParentGlobal.find({
+        include: [{
+            model: shareDB.ParentToken,
+            attributes: ['push_token'],
+            required: true
+        }],
+        where: {
+            email: req.body.email
+        }
+    })
+    if (parent != null) {
+        var tokens = parent.get().tb_parent_tokens.map((item) => item.push_token)
+        var payload = {
+            data: Object.assign({}, req.body.data)
+        }
+        console.log(tokens)
+        console.log(payload)
+        admin.messaging().sendToDevice(
+                tokens,
+                payload, {
+                    contentAvailable: true,
+                    priority: "normal",
+                })
+            .then(function(response) {
+                // See the MessagingDevicesResponse reference documentation for
+                // the contents of response.
+                console.log("Successfully sent message:", response);
+                res.send(response)
+            })
+            .catch(function(error) {
+                console.log("Error sending message:", error);
+                res.send(error)
+            });
+    } else {
+        res.send({ email: req.body.email, status: false, msg: 'Not found token for this parent' })
+    }
 
 })
 

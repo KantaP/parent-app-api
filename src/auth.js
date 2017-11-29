@@ -36,18 +36,28 @@ passport.use('local', new LocalStrategy(
             var companiesLogo = []
             for (let i = 0; i < databases.length; i++) {
                 var DB = sequelizeInitial(databases[i]);
-                var companyLogo = await DB.Account.find({
-                    attributes: ['name', 'company_logo'],
+                console.log(databases[i])
+                var account = await DB.Parent.find({
+                    attributes: ['account'],
                     where: {
                         email: parentGlobal.get().email
                     }
                 })
-                companiesLogo.push({
-                    companyName: companyLogo.get().name,
-                    logo: companyLogo.get().company_logo
-                })
+                console.log(account)
+                if (account != null) {
+                    var companyLogo = await DB.Account.find({
+                        attributes: ['name', 'company_logo'],
+                        where: {
+                            account_id: account.get().account
+                        }
+                    })
+                    companiesLogo.push({
+                        companyName: companyLogo.get().name,
+                        logo: companyLogo.get().company_logo
+                    })
+                }
             }
-            var result = Object.assign({}, parentGlobal.get(), { databases: databases, companiesLogo: companiesLogo })
+            var result = Object.assign({}, parentGlobal.get(), { databases, companiesLogo })
             return done(null, result)
         } else {
             return done(null, null, { message: 'Invalid username or password.' })
@@ -71,7 +81,30 @@ passport.deserializeUser(async(id, done) => {
             parent_id: parentGlobal.get().id
         }
     })
-    var result = Object.assign({}, parentGlobal.get(), { databases: parentDetail.map((item) => item.get().database_name) })
+    var databases = parentDetail.map((item) => item.get().database_name)
+    var companiesLogo = []
+    for (let i = 0; i < databases.length; i++) {
+        var DB = sequelizeInitial(databases[i]);
+        var account = await DB.Parent.find({
+            attributes: ['account_id'],
+            where: {
+                email: parentGlobal.get().email
+            }
+        })
+        if (account.length > 0) {
+            var companyLogo = await DB.Account.find({
+                attributes: ['name', 'company_logo'],
+                where: {
+                    account_id: account.get().account_id
+                }
+            })
+            companiesLogo.push({
+                companyName: companyLogo.get().name,
+                logo: companyLogo.get().company_logo
+            })
+        }
+    }
+    var result = Object.assign({}, parentGlobal.get(), { databases, companiesLogo })
     return done(err, result)
         // return done(err, parentGlobal.get());
         // Parent.find({

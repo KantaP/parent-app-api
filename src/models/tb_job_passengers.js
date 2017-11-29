@@ -55,6 +55,10 @@ module.exports = function(sequelize, DataTypes) {
         movement_order: {
             type: DataTypes.INTEGER(11),
             allowNull: false
+        },
+        action_point_id: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
         }
     }, {
         tableName: 'tb_job_passengers',

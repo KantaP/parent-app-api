@@ -48,9 +48,47 @@ const makeJourney = async(pickUpArr, dropOffArr) => {
     return response
 }
 
-const findPassengerLog = ({ point_id, passenger_id, quote_id }) => {
+const findPassengerLog = ({ point_id, passenger_id, quote_id, pickup }) => {
     return new Promise((resolve, reject) => {
-        globalDB.PassengerLog.findAll({
+        // globalDB.PassengerLog.findAll({
+        //         where: {
+        //             point_id: {
+        //                 $eq: point_id
+        //             },
+        //             passenger_id: {
+        //                 $eq: passenger_id
+        //             },
+        //             quote_id: {
+        //                 $eq: quote_id
+        //             }
+        //         },
+        //         order: [
+        //             ['log_id', 'DESC']
+        //         ],
+        //         limit: 1
+        //     })
+        //     .then(async(passengerLogs) => {
+        //         if (passengerLogs == null) resolve(null)
+        //         else {
+        //             for (let i = 0; i < passengerLogs.length; i++) {
+        //                 // console.log(passengerLogs[i])
+        //                 var movement = await globalDB.Movement.find({
+        //                         where: {
+        //                             movement_order: passengerLogs[i].get().movement_order,
+        //                             quote_id: quote_id
+        //                         },
+        //                         attributes: ['collection_address', 'destination_address']
+        //                     })
+        //                     // console.log(movement)
+        //                 passengerLogs[i].address = {
+        //                     collection: movement.get().collection_address,
+        //                     destination: movement.get().destination_address
+        //                 }
+        //             }
+        //             resolve(passengerLogs)
+        //         }
+        //     })
+        globalDB.JobPassengers.findAll({
                 where: {
                     point_id: {
                         $eq: point_id
@@ -60,32 +98,55 @@ const findPassengerLog = ({ point_id, passenger_id, quote_id }) => {
                     },
                     quote_id: {
                         $eq: quote_id
+                    },
+                    pickup: {
+                        $eq: pickup
                     }
                 },
-                order: [
-                    ['log_id', 'DESC']
-                ],
                 limit: 1
             })
-            .then(async(passengerLogs) => {
-                if (passengerLogs == null) resolve(null)
-                else {
-                    for (let i = 0; i < passengerLogs.length; i++) {
-                        // console.log(passengerLogs[i])
-                        var movement = await globalDB.Movement.find({
-                                where: {
-                                    movement_order: passengerLogs[i].get().movement_order,
-                                    quote_id: quote_id
-                                },
-                                attributes: ['collection_address', 'destination_address']
-                            })
-                            // console.log(movement)
-                        passengerLogs[i].address = {
-                            collection: movement.get().collection_address,
-                            destination: movement.get().destination_address
-                        }
+            .then(async(jobPassenger) => {
+                // console.log(jobPassenger)
+
+                var type_code = 0
+                var jobPassengerItem = jobPassenger[0].get()
+                if (jobPassengerItem.pickup == 1) {
+                    if (jobPassengerItem.point_id != jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && (jobPassengerItem.status == 1 || jobPassengerItem.status == -1)) {
+                        type_code = 3
+                    } else if (jobPassengerItem.point_id == jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                        type_code = 2
                     }
-                    resolve(passengerLogs)
+                } else if (jobPassengerItem.pickup == 0) {
+                    if (jobPassengerItem.point_id != jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                        type_code = 5
+                    } else if (jobPassengerItem.point_id == jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                        type_code = 4
+                    }
+                }
+
+                var passengerLog = {
+                    log_type_code: type_code,
+                    date_time_scan: jobPassenger[0].get().date_time_scan,
+                    route_type: jobPassenger[0].get().pickup,
+                    address: {}
+                }
+                var movement = await globalDB.Movement.find({
+                        where: {
+                            movement_id: point_id,
+                            quote_id: quote_id
+                        },
+                        attributes: ['collection_address', 'destination_address']
+                    })
+                    // console.log(movement)
+                passengerLog.address = {
+                    collection: movement.get().collection_address,
+                    destination: movement.get().destination_address
+                }
+                jobPassenger[0].dataValues = Object.assign({}, jobPassenger[0].dataValues, passengerLog)
+                if (type_code != 0) {
+                    resolve(jobPassenger)
+                } else {
+                    resolve([])
                 }
             })
     })
@@ -241,6 +302,8 @@ const resolvers = {
                             var journeyData = await makeJourney(jobDataPickUp[i], jobDataDropOff[i])
                             var col_passenger_log = await findPassengerLog(jobDataPickUp[i])
                             var des_passenger_log = await findPassengerLog(jobDataDropOff[i])
+                            console.log(col_passenger_log)
+                            console.log(des_passenger_log)
                             journeyData.collection_address.passenger_log = (col_passenger_log.length > 0) ? col_passenger_log.map((item) => item.get()) : []
                             journeyData.destination_address.passenger_log = (des_passenger_log) ? des_passenger_log.map((item) => item.get()) : []
                             journeyData.collection_address.time_start = moment(journeyData.collection_address.time_start, 'HH:mm:ss').format('HH:mm')
@@ -266,6 +329,7 @@ const resolvers = {
                                     }
                                 }
                             })
+                            console.log(journeyData)
                             passengerData[i].routeToday.push(journeyData)
                         }
                     }

@@ -23,7 +23,7 @@ var crypto = require('crypto');
 
 _passport2.default.use('local', new LocalStrategy(function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(username, password, done) {
-        var shareDB, parentGlobal, parentDetail, result;
+        var shareDB, parentGlobal, parentDetail, databases, companiesLogo, i, DB, account, companyLogo, result;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -42,7 +42,7 @@ _passport2.default.use('local', new LocalStrategy(function () {
                         parentGlobal = _context.sent;
 
                         if (!(parentGlobal != null)) {
-                            _context.next = 12;
+                            _context.next = 30;
                             break;
                         }
 
@@ -55,15 +55,68 @@ _passport2.default.use('local', new LocalStrategy(function () {
 
                     case 7:
                         parentDetail = _context.sent;
-                        result = Object.assign({}, parentGlobal.get(), { databases: parentDetail.map(function (item) {
-                                return item.get().database_name;
-                            }) });
+                        databases = parentDetail.map(function (item) {
+                            return item.get().database_name;
+                        });
+                        companiesLogo = [];
+                        i = 0;
+
+                    case 11:
+                        if (!(i < databases.length)) {
+                            _context.next = 26;
+                            break;
+                        }
+
+                        DB = (0, _connector.sequelizeInitial)(databases[i]);
+
+                        console.log(databases[i]);
+                        _context.next = 16;
+                        return DB.Parent.find({
+                            attributes: ['account'],
+                            where: {
+                                email: parentGlobal.get().email
+                            }
+                        });
+
+                    case 16:
+                        account = _context.sent;
+
+                        console.log(account);
+
+                        if (!(account != null)) {
+                            _context.next = 23;
+                            break;
+                        }
+
+                        _context.next = 21;
+                        return DB.Account.find({
+                            attributes: ['name', 'company_logo'],
+                            where: {
+                                account_id: account.get().account
+                            }
+                        });
+
+                    case 21:
+                        companyLogo = _context.sent;
+
+                        companiesLogo.push({
+                            companyName: companyLogo.get().name,
+                            logo: companyLogo.get().company_logo
+                        });
+
+                    case 23:
+                        i++;
+                        _context.next = 11;
+                        break;
+
+                    case 26:
+                        result = Object.assign({}, parentGlobal.get(), { databases: databases, companiesLogo: companiesLogo });
                         return _context.abrupt('return', done(null, result));
 
-                    case 12:
+                    case 30:
                         return _context.abrupt('return', done(null, null, { message: 'Invalid username or password.' }));
 
-                    case 13:
+                    case 31:
                     case 'end':
                         return _context.stop();
                 }
@@ -80,7 +133,7 @@ _passport2.default.serializeUser(function (user, done) {
 });
 _passport2.default.deserializeUser(function () {
     var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(id, done) {
-        var shareDB, parentGlobal, parentDetail, result;
+        var shareDB, parentGlobal, parentDetail, databases, companiesLogo, i, DB, account, companyLogo, result;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
                 switch (_context2.prev = _context2.next) {
@@ -106,12 +159,61 @@ _passport2.default.deserializeUser(function () {
 
                     case 6:
                         parentDetail = _context2.sent;
-                        result = Object.assign({}, parentGlobal.get(), { databases: parentDetail.map(function (item) {
-                                return item.get().database_name;
-                            }) });
+                        databases = parentDetail.map(function (item) {
+                            return item.get().database_name;
+                        });
+                        companiesLogo = [];
+                        i = 0;
+
+                    case 10:
+                        if (!(i < databases.length)) {
+                            _context2.next = 23;
+                            break;
+                        }
+
+                        DB = (0, _connector.sequelizeInitial)(databases[i]);
+                        _context2.next = 14;
+                        return DB.Parent.find({
+                            attributes: ['account_id'],
+                            where: {
+                                email: parentGlobal.get().email
+                            }
+                        });
+
+                    case 14:
+                        account = _context2.sent;
+
+                        if (!(account.length > 0)) {
+                            _context2.next = 20;
+                            break;
+                        }
+
+                        _context2.next = 18;
+                        return DB.Account.find({
+                            attributes: ['name', 'company_logo'],
+                            where: {
+                                account_id: account.get().account_id
+                            }
+                        });
+
+                    case 18:
+                        companyLogo = _context2.sent;
+
+                        companiesLogo.push({
+                            companyName: companyLogo.get().name,
+                            logo: companyLogo.get().company_logo
+                        });
+
+                    case 20:
+                        i++;
+                        _context2.next = 10;
+                        break;
+
+                    case 23:
+                        result = Object.assign({}, parentGlobal.get(), { databases: databases, companiesLogo: companiesLogo });
                         return _context2.abrupt('return', done(err, result));
 
-                    case 9:
+                    case 25:
                     case 'end':
                         return _context2.stop();
                 }

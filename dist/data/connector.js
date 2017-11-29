@@ -34,8 +34,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var sequelizeInitial = function sequelizeInitial(DBname) {
 
     if (DBname != 'ecm_share') {
-        var sequelize = new _sequelize2.default(DBname, 'programmer', 'Pa$$wordIT01', {
-            host: '52.77.47.28',
+        var sequelize = new _sequelize2.default(DBname, 'root', '3EwqdeFT$', {
+            host: 'singapore-ecm.cbdc0q4tfird.ap-southeast-1.rds.amazonaws.com',
             dialect: 'mysql',
             pool: {
                 max: 5,
@@ -88,8 +88,8 @@ var sequelizeInitial = function sequelizeInitial(DBname) {
             Account: Account
         };
     } else {
-        var sequelize = new _sequelize2.default('ecm_share', 'programmer', 'Pa$$wordIT01', {
-            host: '52.77.47.28',
+        var sequelize = new _sequelize2.default('ecm_share', 'paths', 'paths', {
+            host: 'singapore-ecm.cbdc0q4tfird.ap-southeast-1.rds.amazonaws.com',
             dialect: 'mysql',
             pool: {
                 max: 5,
@@ -97,12 +97,13 @@ var sequelizeInitial = function sequelizeInitial(DBname) {
                 idle: 10000
             }
         });
-
         var ParentGlobal = sequelize.import('../models/tb_parent_global.js');
         var ParentDetail = sequelize.import('../models/tb_parent_detail.js');
         var ParentToken = sequelize.import('../models/tb_parent_token.js');
         // ParentGlobal.hasMany(ParentDetail, { foreignKey: 'parent_id' })
         // ParentDetail.belongsTo(ParentGlobal)
+        ParentGlobal.hasMany(ParentToken, { foreignKey: 'parent_id' });
+        ParentToken.belongsTo(ParentGlobal, { foreignKey: 'parent_id' });
         return {
             ParentGlobal: ParentGlobal,
             ParentDetail: ParentDetail,

@@ -12,8 +12,6 @@ var _express = require('express');
 
 var _express2 = _interopRequireDefault(_express);
 
-var _apolloServerExpress = require('apollo-server-express');
-
 var _bodyParser = require('body-parser');
 
 var _bodyParser2 = _interopRequireDefault(_bodyParser);
@@ -129,10 +127,8 @@ graphQLServer.use('/graphql', _passport2.default.authenticate('bearer', { sessio
     };
 }));
 
-// graphQLServer.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
-
 graphQLServer.use(_bodyParser2.default.json()); // support json encoded bodies
-graphQLServer.use(_bodyParser2.default.urlencoded({ extended: false }));
+graphQLServer.use(_bodyParser2.default.urlencoded({ extended: true }));
 
 graphQLServer.post('/sendSMS', _passport2.default.authenticate('bearer', { session: false }), function (req, res) {
     if (req.user == null) {
@@ -175,11 +171,12 @@ graphQLServer.post('/login', _passport2.default.authenticate('local', { session:
     var _req$user = req.user,
         id = _req$user.id,
         email = _req$user.email,
-        phone = _req$user.phone;
+        phone = _req$user.phone,
+        companiesLogo = _req$user.companiesLogo;
 
     res.send({
         token: token,
-        user: { id: id, email: email, phone: phone }
+        user: { id: id, email: email, phone: phone, companiesLogo: companiesLogo }
     });
 });
 
@@ -283,7 +280,67 @@ graphQLServer.get('/companycode/:app_code', function () {
     };
 }());
 
-graphQLServer.post('/passOnDevices', function () {});
+graphQLServer.post('/passOnDevices', function () {
+    var _ref4 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee3(req, res) {
+        var shareDB, parent, tokens, payload;
+        return _regenerator2.default.wrap(function _callee3$(_context3) {
+            while (1) {
+                switch (_context3.prev = _context3.next) {
+                    case 0:
+                        shareDB = (0, _connector.sequelizeInitial)('ecm_share');
+                        _context3.next = 3;
+                        return shareDB.ParentGlobal.find({
+                            include: [{
+                                model: shareDB.ParentToken,
+                                attributes: ['push_token'],
+                                required: true
+                            }],
+                            where: {
+                                email: req.body.email
+                            }
+                        });
+
+                    case 3:
+                        parent = _context3.sent;
+
+                        if (parent != null) {
+                            tokens = parent.get().tb_parent_tokens.map(function (item) {
+                                return item.push_token;
+                            });
+                            payload = {
+                                data: Object.assign({}, req.body.data)
+                            };
+
+                            console.log(tokens);
+                            console.log(payload);
+                            admin.messaging().sendToDevice(tokens, payload, {
+                                contentAvailable: true,
+                                priority: "normal"
+                            }).then(function (response) {
+                                // See the MessagingDevicesResponse reference documentation for
+                                // the contents of response.
+                                console.log("Successfully sent message:", response);
+                                res.send(response);
+                            }).catch(function (error) {
+                                console.log("Error sending message:", error);
+                                res.send(error);
+                            });
+                        } else {
+                            res.send({ email: req.body.email, status: false, msg: 'Not found token for this parent' });
+                        }
+
+                    case 5:
+                    case 'end':
+                        return _context3.stop();
+                }
+            }
+        }, _callee3, undefined);
+    }));
+
+    return function (_x5, _x6) {
+        return _ref4.apply(this, arguments);
+    };
+}());
 
 // graphQLServer.get('/refreshJWT', passport.authenticate('bearer', { session: false }), (req, res) => {
 //     Parent.find({

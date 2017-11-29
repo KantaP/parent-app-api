@@ -228,7 +228,16 @@ module.exports = function(sequelize, DataTypes) {
         company_logo: {
             type: DataTypes.STRING(),
             allowNull: false
+        },
+        tracking_phone: {
+            type: DataTypes.STRING(),
+            allowNull: false
+        },
+        tracking_email: {
+            type: DataTypes.STRING(),
+            allowNull: false
         }
+
     }, {
         tableName: 'tb_accounts',
         timestamps: false

@@ -108,10 +108,49 @@ var makeJourney = function () {
 var findPassengerLog = function findPassengerLog(_ref2) {
     var point_id = _ref2.point_id,
         passenger_id = _ref2.passenger_id,
-        quote_id = _ref2.quote_id;
+        quote_id = _ref2.quote_id,
+        pickup = _ref2.pickup;
 
     return new Promise(function (resolve, reject) {
-        globalDB.PassengerLog.findAll({
+        // globalDB.PassengerLog.findAll({
+        //         where: {
+        //             point_id: {
+        //                 $eq: point_id
+        //             },
+        //             passenger_id: {
+        //                 $eq: passenger_id
+        //             },
+        //             quote_id: {
+        //                 $eq: quote_id
+        //             }
+        //         },
+        //         order: [
+        //             ['log_id', 'DESC']
+        //         ],
+        //         limit: 1
+        //     })
+        //     .then(async(passengerLogs) => {
+        //         if (passengerLogs == null) resolve(null)
+        //         else {
+        //             for (let i = 0; i < passengerLogs.length; i++) {
+        //                 // console.log(passengerLogs[i])
+        //                 var movement = await globalDB.Movement.find({
+        //                         where: {
+        //                             movement_order: passengerLogs[i].get().movement_order,
+        //                             quote_id: quote_id
+        //                         },
+        //                         attributes: ['collection_address', 'destination_address']
+        //                     })
+        //                     // console.log(movement)
+        //                 passengerLogs[i].address = {
+        //                     collection: movement.get().collection_address,
+        //                     destination: movement.get().destination_address
+        //                 }
+        //             }
+        //             resolve(passengerLogs)
+        //         }
+        //     })
+        globalDB.JobPassengers.findAll({
             where: {
                 point_id: {
                     $eq: point_id
@@ -121,62 +160,69 @@ var findPassengerLog = function findPassengerLog(_ref2) {
                 },
                 quote_id: {
                     $eq: quote_id
+                },
+                pickup: {
+                    $eq: pickup
                 }
             },
-            order: [['log_id', 'DESC']],
             limit: 1
         }).then(function () {
-            var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(passengerLogs) {
-                var i, movement;
+            var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(jobPassenger) {
+                var type_code, jobPassengerItem, passengerLog, movement;
                 return _regenerator2.default.wrap(function _callee2$(_context2) {
                     while (1) {
                         switch (_context2.prev = _context2.next) {
                             case 0:
-                                if (!(passengerLogs == null)) {
-                                    _context2.next = 4;
-                                    break;
+                                // console.log(jobPassenger)
+
+                                type_code = 0;
+                                jobPassengerItem = jobPassenger[0].get();
+
+                                if (jobPassengerItem.pickup == 1) {
+                                    if (jobPassengerItem.point_id != jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && (jobPassengerItem.status == 1 || jobPassengerItem.status == -1)) {
+                                        type_code = 3;
+                                    } else if (jobPassengerItem.point_id == jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                                        type_code = 2;
+                                    }
+                                } else if (jobPassengerItem.pickup == 0) {
+                                    if (jobPassengerItem.point_id != jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                                        type_code = 5;
+                                    } else if (jobPassengerItem.point_id == jobPassengerItem.action_point_id && jobPassengerItem.action_point_id != 0 && jobPassengerItem.status == 1) {
+                                        type_code = 4;
+                                    }
                                 }
 
-                                resolve(null);
-                                _context2.next = 14;
-                                break;
-
-                            case 4:
-                                i = 0;
-
-                            case 5:
-                                if (!(i < passengerLogs.length)) {
-                                    _context2.next = 13;
-                                    break;
-                                }
-
-                                _context2.next = 8;
+                                passengerLog = {
+                                    log_type_code: type_code,
+                                    date_time_scan: jobPassenger[0].get().date_time_scan,
+                                    route_type: jobPassenger[0].get().pickup,
+                                    address: {}
+                                };
+                                _context2.next = 6;
                                 return globalDB.Movement.find({
                                     where: {
-                                        movement_order: passengerLogs[i].get().movement_order,
+                                        movement_id: point_id,
                                         quote_id: quote_id
                                     },
                                     attributes: ['collection_address', 'destination_address']
                                 });
 
-                            case 8:
+                            case 6:
                                 movement = _context2.sent;
 
                                 // console.log(movement)
-                                passengerLogs[i].address = {
+                                passengerLog.address = {
                                     collection: movement.get().collection_address,
                                     destination: movement.get().destination_address
                                 };
+                                jobPassenger[0].dataValues = Object.assign({}, jobPassenger[0].dataValues, passengerLog);
+                                if (type_code != 0) {
+                                    resolve(jobPassenger);
+                                } else {
+                                    resolve([]);
+                                }
 
                             case 10:
-                                i++;
-                                _context2.next = 5;
-                                break;
-
-                            case 13:
-                                resolve(passengerLogs);
-
-                            case 14:
                             case 'end':
                                 return _context2.stop();
                         }
@@ -333,7 +379,7 @@ var resolvers = {
 
                             case 4:
                                 if (!(i < request.user.databases.length)) {
-                                    _context4.next = 68;
+                                    _context4.next = 71;
                                     break;
                                 }
 
@@ -373,7 +419,7 @@ var resolvers = {
 
                             case 16:
                                 if (!(_i < passengerData.length)) {
-                                    _context4.next = 63;
+                                    _context4.next = 66;
                                     break;
                                 }
 
@@ -407,7 +453,7 @@ var resolvers = {
                                     break;
                                 }
 
-                                return _context4.abrupt('continue', 60);
+                                return _context4.abrupt('continue', 63);
 
                             case 23:
                                 _context4.next = 25;
@@ -429,7 +475,7 @@ var resolvers = {
                                     break;
                                 }
 
-                                return _context4.abrupt('continue', 60);
+                                return _context4.abrupt('continue', 63);
 
                             case 28:
                                 globalDB = schoolDB;
@@ -445,7 +491,7 @@ var resolvers = {
                                 journeys = [];
 
                                 if (!(jobDataPickUp.length > 0 && jobDataDropOff.length > 0)) {
-                                    _context4.next = 60;
+                                    _context4.next = 63;
                                     break;
                                 }
 
@@ -453,7 +499,7 @@ var resolvers = {
 
                             case 35:
                                 if (!(_i2 < jobDataPickUp.length)) {
-                                    _context4.next = 60;
+                                    _context4.next = 63;
                                     break;
                                 }
 
@@ -473,6 +519,8 @@ var resolvers = {
                             case 44:
                                 des_passenger_log = _context4.sent;
 
+                                console.log(col_passenger_log);
+                                console.log(des_passenger_log);
                                 journeyData.collection_address.passenger_log = col_passenger_log.length > 0 ? col_passenger_log.map(function (item) {
                                     return item.get();
                                 }) : [];
@@ -492,7 +540,7 @@ var resolvers = {
                                 }
                                 journeyData.j_id = jobDataPickUp[_i2].j_id;
                                 journeyData.date_today = (0, _moment2.default)().format('DD/MM/YYYY');
-                                _context4.next = 55;
+                                _context4.next = 57;
                                 return schoolDB.Tracking.find({
                                     order: [['track_id', 'DESC']],
                                     attributes: ['lat', 'lng', 'timestamp', 'j_id'],
@@ -503,37 +551,38 @@ var resolvers = {
                                     }
                                 });
 
-                            case 55:
+                            case 57:
                                 journeyData.tracking = _context4.sent;
 
+                                console.log(journeyData);
                                 passengerData[_i2].routeToday.push(journeyData);
 
-                            case 57:
+                            case 60:
                                 _i2++;
                                 _context4.next = 35;
                                 break;
 
-                            case 60:
+                            case 63:
                                 _i++;
                                 _context4.next = 16;
                                 break;
 
-                            case 63:
+                            case 66:
                                 result.push({
                                     school_name: accountData.get().name,
                                     passengers: passengerData
                                 });
                                 schoolDB = null;
 
-                            case 65:
+                            case 68:
                                 i++;
                                 _context4.next = 4;
                                 break;
 
-                            case 68:
+                            case 71:
                                 return _context4.abrupt('return', result);
 
-                            case 69:
+                            case 72:
                             case 'end':
                                 return _context4.stop();
                         }

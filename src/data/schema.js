@@ -148,8 +148,8 @@ const typeDefs = `
     type SchoolContact {
         name: String!
         address: String!
-        phone: String!
-        email: String!
+        tracking_phone: String!
+        tracking_email: String!
     }
 
     schema {
