@@ -55,31 +55,51 @@ var makeJourney = function () {
                         return findMovementData(pickUpArr['point_id'], ['date_start', 'time_start', 'collection_address', 'progress', 'add_lat', 'add_lng', 'movement_order']);
 
                     case 3:
-                        collection_address_data = _context.sent;
-                        _context.next = 6;
-                        return findMovementData(dropOffArr['point_id'], ['date_start', 'time_start', 'destination_address', 'progress', 'des_lat', 'des_lng', 'movement_order']);
+                        _context.t0 = _context.sent;
+
+                        if (_context.t0) {
+                            _context.next = 6;
+                            break;
+                        }
+
+                        _context.t0 = undefined;
 
                     case 6:
-                        destination_address_data = _context.sent;
+                        collection_address_data = _context.t0;
+                        _context.next = 9;
+                        return findMovementData(dropOffArr['point_id'], ['date_start', 'time_start', 'destination_address', 'progress', 'des_lat', 'des_lng', 'movement_order']);
+
+                    case 9:
+                        _context.t1 = _context.sent;
+
+                        if (_context.t1) {
+                            _context.next = 12;
+                            break;
+                        }
+
+                        _context.t1 = undefined;
+
+                    case 12:
+                        destination_address_data = _context.t1;
 
                         response = (0, _extends3.default)({}, response, {
-                            collection_address: Object.assign({}, collection_address_data.get(), {
+                            collection_address: Object.assign({}, collection_address_data ? collection_address_data.get() : {}, {
                                 time_end: (0, _moment2.default)(collection_address_data.get().tb_movement_option.get().date_end).utc().format('HH:mm'),
                                 address: collection_address_data.get().collection_address,
                                 latlng: collection_address_data.get().add_lat + ',' + collection_address_data.get().add_lng
                             })
                         });
                         response = (0, _extends3.default)({}, response, {
-                            destination_address: Object.assign({}, destination_address_data.get(), {
+                            destination_address: Object.assign({}, destination_address_data ? destination_address_data.get() : {}, {
                                 time_end: (0, _moment2.default)(destination_address_data.get().tb_movement_option.get().date_end).utc().format('HH:mm'),
                                 address: destination_address_data.get().destination_address,
                                 latlng: destination_address_data.get().des_lat + ',' + destination_address_data.get().des_lng
                             })
                         });
-                        _context.next = 11;
+                        _context.next = 17;
                         return findExtraRoute(pickUpArr.quote_id, collection_address_data.get().movement_order, destination_address_data.get().movement_order);
 
-                    case 11:
+                    case 17:
                         extra_address_data = _context.sent;
 
                         response.extra_address = extra_address_data.filter(function (item) {
@@ -92,7 +112,7 @@ var makeJourney = function () {
                         });
                         return _context.abrupt('return', response);
 
-                    case 14:
+                    case 20:
                     case 'end':
                         return _context.stop();
                 }
@@ -173,7 +193,12 @@ var findPassengerLog = function findPassengerLog(_ref2) {
                     while (1) {
                         switch (_context2.prev = _context2.next) {
                             case 0:
-                                // console.log(jobPassenger)
+                                console.log(jobPassenger);
+
+                                if (!(jobPassenger.length > 0)) {
+                                    _context2.next = 14;
+                                    break;
+                                }
 
                                 type_code = 0;
                                 jobPassengerItem = jobPassenger[0].get();
@@ -198,7 +223,7 @@ var findPassengerLog = function findPassengerLog(_ref2) {
                                     route_type: jobPassenger[0].get().pickup,
                                     address: {}
                                 };
-                                _context2.next = 6;
+                                _context2.next = 8;
                                 return globalDB.Movement.find({
                                     where: {
                                         movement_id: point_id,
@@ -207,7 +232,7 @@ var findPassengerLog = function findPassengerLog(_ref2) {
                                     attributes: ['collection_address', 'destination_address']
                                 });
 
-                            case 6:
+                            case 8:
                                 movement = _context2.sent;
 
                                 // console.log(movement)
@@ -221,8 +246,13 @@ var findPassengerLog = function findPassengerLog(_ref2) {
                                 } else {
                                     resolve([]);
                                 }
+                                _context2.next = 15;
+                                break;
 
-                            case 10:
+                            case 14:
+                                resolve([]);
+
+                            case 15:
                             case 'end':
                                 return _context2.stop();
                         }
@@ -263,7 +293,8 @@ var findMovementData = function findMovementData(movement_id, attributes) {
             include: [{
                 model: globalDB.MovementOptions,
                 as: 'tb_movement_option',
-                attributes: ['date_end']
+                attributes: ['date_end'],
+                required: true
             }],
             where: {
                 movement_id: {
@@ -271,6 +302,7 @@ var findMovementData = function findMovementData(movement_id, attributes) {
                 }
             }
         }).then(function (movement) {
+            console.log('movement:' + movement_id, movement);
             resolve(movement);
         }).catch(function (err) {
             return console.log(err.message);
@@ -360,7 +392,7 @@ var resolvers = {
             var _this2 = this;
 
             return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee4() {
-                var result, i, schoolDB, parentData, passengerData, accountData, _i, quote, jobs, jobData, jobDataPickUp, jobDataDropOff, journeys, _i2, journeyData, col_passenger_log, des_passenger_log, datetime_start, datetime_end;
+                var result, i, schoolDB, parentData, passengerData, accountData, _i, quote, jobs, jobData, jobDataPickUp, jobDataDropOff, journeys, j, journeyData, col_passenger_log, des_passenger_log, datetime_start, datetime_end;
 
                 return _regenerator2.default.wrap(function _callee4$(_context4) {
                     while (1) {
@@ -374,17 +406,18 @@ var resolvers = {
                                 return _context4.abrupt('return', null);
 
                             case 2:
+                                _context4.prev = 2;
                                 result = [];
                                 i = 0;
 
-                            case 4:
+                            case 5:
                                 if (!(i < request.user.databases.length)) {
-                                    _context4.next = 71;
+                                    _context4.next = 76;
                                     break;
                                 }
 
                                 schoolDB = (0, _connector.sequelizeInitial)(request.user.databases[i]);
-                                _context4.next = 8;
+                                _context4.next = 9;
                                 return schoolDB.Parent.find({
                                     attributes: ['parent_id', 'account'],
                                     where: {
@@ -392,9 +425,19 @@ var resolvers = {
                                     }
                                 });
 
-                            case 8:
+                            case 9:
                                 parentData = _context4.sent;
-                                _context4.next = 11;
+
+                                if (!(parentData == null)) {
+                                    _context4.next = 13;
+                                    break;
+                                }
+
+                                console.log('parent data null');
+                                return _context4.abrupt('return', null);
+
+                            case 13:
+                                _context4.next = 15;
                                 return schoolDB.Passengers.findAll({
                                     include: [{
                                         model: schoolDB.ParentPassenger,
@@ -404,27 +447,27 @@ var resolvers = {
                                     }]
                                 });
 
-                            case 11:
+                            case 15:
                                 passengerData = _context4.sent;
-                                _context4.next = 14;
+                                _context4.next = 18;
                                 return schoolDB.Account.find({
                                     where: {
                                         account_id: parentData.get().account
                                     }
                                 });
 
-                            case 14:
+                            case 18:
                                 accountData = _context4.sent;
                                 _i = 0;
 
-                            case 16:
+                            case 20:
                                 if (!(_i < passengerData.length)) {
-                                    _context4.next = 66;
+                                    _context4.next = 71;
                                     break;
                                 }
 
                                 passengerData[_i].routeToday = [];
-                                _context4.next = 20;
+                                _context4.next = 24;
                                 return schoolDB.Quote.find({
                                     attributes: ['quote_id'],
                                     include: [{
@@ -445,18 +488,19 @@ var resolvers = {
                                     }
                                 });
 
-                            case 20:
+                            case 24:
                                 quote = _context4.sent;
 
                                 if (!(quote == null)) {
-                                    _context4.next = 23;
+                                    _context4.next = 28;
                                     break;
                                 }
 
-                                return _context4.abrupt('continue', 63);
+                                console.log('quote data null');
+                                return _context4.abrupt('continue', 68);
 
-                            case 23:
-                                _context4.next = 25;
+                            case 28:
+                                _context4.next = 30;
                                 return schoolDB.JobPassengers.findAll({
                                     attributes: ['quote_id', 'point_id', 'pickup', 'passenger_id', 'j_id'],
                                     where: {
@@ -467,17 +511,18 @@ var resolvers = {
                                     }
                                 });
 
-                            case 25:
+                            case 30:
                                 jobs = _context4.sent;
 
                                 if (!(jobs == null)) {
-                                    _context4.next = 28;
+                                    _context4.next = 34;
                                     break;
                                 }
 
-                                return _context4.abrupt('continue', 63);
+                                console.log('jobs data null');
+                                return _context4.abrupt('continue', 68);
 
-                            case 28:
+                            case 34:
                                 globalDB = schoolDB;
                                 jobData = jobs.map(function (job) {
                                     return job.get();
@@ -489,38 +534,39 @@ var resolvers = {
                                     return job.pickup == 0;
                                 });
                                 journeys = [];
+                                // console.log(passengerData[i].passenger_id)
 
                                 if (!(jobDataPickUp.length > 0 && jobDataDropOff.length > 0)) {
-                                    _context4.next = 63;
+                                    _context4.next = 68;
                                     break;
                                 }
 
-                                _i2 = 0;
-
-                            case 35:
-                                if (!(_i2 < jobDataPickUp.length)) {
-                                    _context4.next = 63;
-                                    break;
-                                }
-
-                                _context4.next = 38;
-                                return makeJourney(jobDataPickUp[_i2], jobDataDropOff[_i2]);
-
-                            case 38:
-                                journeyData = _context4.sent;
-                                _context4.next = 41;
-                                return findPassengerLog(jobDataPickUp[_i2]);
+                                j = 0;
 
                             case 41:
-                                col_passenger_log = _context4.sent;
+                                if (!(j < jobDataPickUp.length)) {
+                                    _context4.next = 68;
+                                    break;
+                                }
+
                                 _context4.next = 44;
-                                return findPassengerLog(jobDataDropOff[_i2]);
+                                return makeJourney(jobDataPickUp[j], jobDataDropOff[j]);
 
                             case 44:
+                                journeyData = _context4.sent;
+                                _context4.next = 47;
+                                return findPassengerLog(jobDataPickUp[j]);
+
+                            case 47:
+                                col_passenger_log = _context4.sent;
+                                _context4.next = 50;
+                                return findPassengerLog(jobDataDropOff[j]);
+
+                            case 50:
                                 des_passenger_log = _context4.sent;
 
-                                console.log(col_passenger_log);
-                                console.log(des_passenger_log);
+                                console.log('col_passenger', col_passenger_log);
+                                console.log('des_passenger', des_passenger_log);
                                 journeyData.collection_address.passenger_log = col_passenger_log.length > 0 ? col_passenger_log.map(function (item) {
                                     return item.get();
                                 }) : [];
@@ -538,56 +584,63 @@ var resolvers = {
                                 } else if ((0, _moment2.default)().isAfter(datetime_end)) {
                                     journeyData.peroid = 'previous';
                                 }
-                                journeyData.j_id = jobDataPickUp[_i2].j_id;
+                                journeyData.j_id = jobDataPickUp[j].j_id;
                                 journeyData.date_today = (0, _moment2.default)().format('DD/MM/YYYY');
-                                _context4.next = 57;
+                                _context4.next = 63;
                                 return schoolDB.Tracking.find({
                                     order: [['track_id', 'DESC']],
                                     attributes: ['lat', 'lng', 'timestamp', 'j_id'],
                                     where: {
                                         j_id: {
-                                            $eq: jobDataPickUp[_i2].j_id
+                                            $eq: jobDataPickUp[j].j_id
                                         }
                                     }
                                 });
 
-                            case 57:
+                            case 63:
                                 journeyData.tracking = _context4.sent;
 
-                                console.log(journeyData);
-                                passengerData[_i2].routeToday.push(journeyData);
+                                // console.log(journeyData)
+                                passengerData[_i].routeToday.push(journeyData);
 
-                            case 60:
-                                _i2++;
-                                _context4.next = 35;
+                            case 65:
+                                j++;
+                                _context4.next = 41;
                                 break;
 
-                            case 63:
+                            case 68:
                                 _i++;
-                                _context4.next = 16;
+                                _context4.next = 20;
                                 break;
 
-                            case 66:
+                            case 71:
                                 result.push({
                                     school_name: accountData.get().name,
                                     passengers: passengerData
                                 });
                                 schoolDB = null;
 
-                            case 68:
+                            case 73:
                                 i++;
-                                _context4.next = 4;
+                                _context4.next = 5;
                                 break;
 
-                            case 71:
+                            case 76:
                                 return _context4.abrupt('return', result);
 
-                            case 72:
+                            case 79:
+                                _context4.prev = 79;
+                                _context4.t0 = _context4['catch'](2);
+
+                                console.log(_context4.t0);
+                                return _context4.abrupt('return', null);
+
+                            case 83:
                             case 'end':
                                 return _context4.stop();
                         }
                     }
-                }, _callee4, _this2);
+                }, _callee4, _this2, [[2, 79]]);
             }))();
         },
         schoolContact: function schoolContact(_, args, request) {
@@ -654,68 +707,52 @@ var resolvers = {
                     }
                 }, _callee5, _this3);
             }))();
-        }
-    },
-    Mutation: {
-        parentPasswordUpdate: function parentPasswordUpdate(_, args, request) {
+        },
+        parentContactOptions: function parentContactOptions(_, args, request) {
             var _this4 = this;
 
             return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee6() {
-                var shareDB, parentUpdate;
+                var database;
                 return _regenerator2.default.wrap(function _callee6$(_context6) {
                     while (1) {
                         switch (_context6.prev = _context6.next) {
                             case 0:
-                                if (checkPermission(request.user.mutate, 'UPDATE_PASSWORD')) {
+                                if (checkPermission(request.user.query, 'SELECT_CONTACT_OPTIONS')) {
                                     _context6.next = 2;
                                     break;
                                 }
 
-                                return _context6.abrupt('return', {
-                                    msg: "Your token is operation not permit",
-                                    status: false
-                                });
+                                return _context6.abrupt('return', null);
 
                             case 2:
-                                args.input['password'] = crypto.createHash('md5').update(args.input['password']).digest('hex');
-                                shareDB = (0, _connector.sequelizeInitial)('ecm_share');
-                                _context6.prev = 4;
-                                _context6.next = 7;
-                                return shareDB.ParentGlobal.update({ password: args.input['password'] }, { where: { email: args.input['email'], id: request.user.id } });
+                                database = (0, _connector.sequelizeInitial)('ecm_share');
+                                return _context6.abrupt('return', database.ParentGlobal.find({
+                                    attributes: ['accept_email', 'accept_notification'],
+                                    where: {
+                                        email: request.user.email
+                                    }
+                                }));
 
-                            case 7:
-                                parentUpdate = _context6.sent;
-                                return _context6.abrupt('return', {
-                                    msg: "Password has been updated",
-                                    status: true
-                                });
-
-                            case 11:
-                                _context6.prev = 11;
-                                _context6.t0 = _context6['catch'](4);
-                                return _context6.abrupt('return', {
-                                    msg: _context6.t0.message,
-                                    status: false
-                                });
-
-                            case 14:
+                            case 4:
                             case 'end':
                                 return _context6.stop();
                         }
                     }
-                }, _callee6, _this4, [[4, 11]]);
+                }, _callee6, _this4);
             }))();
-        },
-        parentPushTokenCreate: function parentPushTokenCreate(_, args, request) {
+        }
+    },
+    Mutation: {
+        parentPasswordUpdate: function parentPasswordUpdate(_, args, request) {
             var _this5 = this;
 
             return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee7() {
-                var shareDB, parentTokenCreate;
+                var shareDB, parentUpdate;
                 return _regenerator2.default.wrap(function _callee7$(_context7) {
                     while (1) {
                         switch (_context7.prev = _context7.next) {
                             case 0:
-                                if (checkPermission(request.user.mutate, 'CREATE_PUSH_TOKEN')) {
+                                if (checkPermission(request.user.mutate, 'UPDATE_PASSWORD')) {
                                     _context7.next = 2;
                                     break;
                                 }
@@ -726,29 +763,170 @@ var resolvers = {
                                 });
 
                             case 2:
+                                args.input['password'] = crypto.createHash('md5').update(args.input['password']).digest('hex');
                                 shareDB = (0, _connector.sequelizeInitial)('ecm_share');
-                                _context7.prev = 3;
-                                _context7.next = 6;
+                                _context7.prev = 4;
+                                _context7.next = 7;
+                                return shareDB.ParentGlobal.update({ password: args.input['password'] }, { where: { email: args.input['email'], id: request.user.id } });
+
+                            case 7:
+                                parentUpdate = _context7.sent;
+                                return _context7.abrupt('return', {
+                                    msg: "Password has been updated",
+                                    status: true
+                                });
+
+                            case 11:
+                                _context7.prev = 11;
+                                _context7.t0 = _context7['catch'](4);
+                                return _context7.abrupt('return', {
+                                    msg: _context7.t0.message,
+                                    status: false
+                                });
+
+                            case 14:
+                            case 'end':
+                                return _context7.stop();
+                        }
+                    }
+                }, _callee7, _this5, [[4, 11]]);
+            }))();
+        },
+        parentPushTokenCreate: function parentPushTokenCreate(_, args, request) {
+            var _this6 = this;
+
+            return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee8() {
+                var shareDB, parentTokenCreate;
+                return _regenerator2.default.wrap(function _callee8$(_context8) {
+                    while (1) {
+                        switch (_context8.prev = _context8.next) {
+                            case 0:
+                                if (checkPermission(request.user.mutate, 'CREATE_PUSH_TOKEN')) {
+                                    _context8.next = 2;
+                                    break;
+                                }
+
+                                return _context8.abrupt('return', {
+                                    msg: "Your token is operation not permit",
+                                    status: false
+                                });
+
+                            case 2:
+                                shareDB = (0, _connector.sequelizeInitial)('ecm_share');
+                                _context8.prev = 3;
+                                _context8.next = 6;
                                 return shareDB.ParentToken.create({
                                     push_token: args.input['push_token'],
                                     parent_id: request.user.id
                                 });
 
                             case 6:
-                                parentTokenCreate = _context7.sent;
-                                return _context7.abrupt('return', { msg: 'New token has been added', status: true });
+                                parentTokenCreate = _context8.sent;
+                                return _context8.abrupt('return', { msg: 'New token has been added', status: true });
 
                             case 10:
-                                _context7.prev = 10;
-                                _context7.t0 = _context7['catch'](3);
-                                return _context7.abrupt('return', { msg: _context7.t0.message, status: false });
+                                _context8.prev = 10;
+                                _context8.t0 = _context8['catch'](3);
+                                return _context8.abrupt('return', { msg: _context8.t0.message, status: false });
 
                             case 13:
                             case 'end':
-                                return _context7.stop();
+                                return _context8.stop();
                         }
                     }
-                }, _callee7, _this5, [[3, 10]]);
+                }, _callee8, _this6, [[3, 10]]);
+            }))();
+        },
+        parentPushTokenDelete: function parentPushTokenDelete(_, args, request) {
+            var _this7 = this;
+
+            return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee9() {
+                var shareDB, parentTokenDelete;
+                return _regenerator2.default.wrap(function _callee9$(_context9) {
+                    while (1) {
+                        switch (_context9.prev = _context9.next) {
+                            case 0:
+                                if (checkPermission(request.user.mutate, 'DELETE_PUSH_TOKEN')) {
+                                    _context9.next = 2;
+                                    break;
+                                }
+
+                                return _context9.abrupt('return', {
+                                    msg: "Your token is operation not permit",
+                                    status: false
+                                });
+
+                            case 2:
+                                shareDB = (0, _connector.sequelizeInitial)('ecm_share');
+                                _context9.prev = 3;
+                                _context9.next = 6;
+                                return shareDB.ParentToken.destroy({
+                                    where: {
+                                        push_token: args.input['push_token'],
+                                        parent_id: request.user.id
+                                    }
+                                });
+
+                            case 6:
+                                parentTokenDelete = _context9.sent;
+                                return _context9.abrupt('return', { msg: 'token has been deleted', status: true });
+
+                            case 10:
+                                _context9.prev = 10;
+                                _context9.t0 = _context9['catch'](3);
+                                return _context9.abrupt('return', { msg: _context9.t0.message, status: false });
+
+                            case 13:
+                            case 'end':
+                                return _context9.stop();
+                        }
+                    }
+                }, _callee9, _this7, [[3, 10]]);
+            }))();
+        },
+        parentUpdateContactOption: function parentUpdateContactOption(_, args, request) {
+            var _this8 = this;
+
+            return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee10() {
+                var shareDB, updateItem, parentContactOptionsUpdate;
+                return _regenerator2.default.wrap(function _callee10$(_context10) {
+                    while (1) {
+                        switch (_context10.prev = _context10.next) {
+                            case 0:
+                                if (checkPermission(request.user.mutate, 'UPDATE_CONTACT_OPTION')) {
+                                    _context10.next = 2;
+                                    break;
+                                }
+
+                                return _context10.abrupt('return', {
+                                    msg: "Your token is operation not permit",
+                                    status: false
+                                });
+
+                            case 2:
+                                shareDB = (0, _connector.sequelizeInitial)('ecm_share');
+                                _context10.prev = 3;
+                                updateItem = {};
+
+                                updateItem[args.input['key']] = args.input['value'];
+                                _context10.next = 8;
+                                return shareDB.ParentGlobal.update(updateItem, { where: { id: request.user.id } });
+
+                            case 8:
+                                parentContactOptionsUpdate = _context10.sent;
+                                return _context10.abrupt('return', { msg: args.input['key'] + ' has been updated', status: true });
+
+                            case 12:
+                                _context10.prev = 12;
+                                _context10.t0 = _context10['catch'](3);
+                                return _context10.abrupt('return', { msg: _context10.t0.message, status: false });
+
+                            case 15:
+                            case 'end':
+                                return _context10.stop();
+                        }
+                    }
+                }, _callee10, _this8, [[3, 12]]);
             }))();
         }
     },

@@ -19,6 +19,14 @@ module.exports = function(sequelize, DataTypes) {
         phone: {
             type: DataTypes.STRING(20),
             allowNull: false
+        },
+        accept_email: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
+        },
+        accept_notification: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false
         }
     }, {
         tableName: 'tb_parent_global',

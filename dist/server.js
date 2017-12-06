@@ -107,7 +107,7 @@ var allowCrossDomain = function allowCrossDomain(req, res, next) {
 };
 graphQLServer.use(allowCrossDomain);
 
-maskErrors(_schema2.default);
+// maskErrors(schema);
 graphQLServer.use('/graphql', _passport2.default.authenticate('bearer', { session: false }), graphqlHTTP(function (request) {
     var startTime = Date.now();
     var user = request.user;
@@ -167,7 +167,7 @@ graphQLServer.post('/login', _passport2.default.authenticate('local', { session:
         query: ['ALL'],
         databases: req.user.databases,
         email: req.user.email
-    }, _config2.default.PARENT_APP_TOKEN, { expiresIn: 3600 });
+    }, _config2.default.PARENT_APP_TOKEN, { expiresIn: "1d" });
     var _req$user = req.user,
         id = _req$user.id,
         email = _req$user.email,

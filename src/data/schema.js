@@ -13,11 +13,14 @@ const typeDefs = `
         parent(email: String!): [ParentBySchool]
         parentPassengers(email: String!): [PassengersBySchool]
         schoolContact: [SchoolContact]
+        parentContactOptions: ParentContactOptions
     }
 
     type Mutation {
         parentPasswordUpdate(input: UpdatePasswordInput!) : UpdatePasswordPayload
         parentPushTokenCreate(input: CreateParentPushTokenInput!) : CreateParentPushTokenPayload
+        parentPushTokenDelete(input: DeleteParentPushTokenInput!) : DeleteParentPushTokenPayload
+        parentUpdateContactOption(input: UpdateParentContactOptionInput!) : UpdateParentContactOptionPayload
     }
 
     input CreateParentPushTokenInput {
@@ -25,6 +28,15 @@ const typeDefs = `
     }
     
     type CreateParentPushTokenPayload {
+        msg: String!
+        status: Boolean!
+    }
+
+    input DeleteParentPushTokenInput {
+        push_token: String!
+    }
+
+    type DeleteParentPushTokenPayload {
         msg: String!
         status: Boolean!
     }
@@ -37,6 +49,21 @@ const typeDefs = `
     type UpdatePasswordPayload {
         msg: String!
         status: Boolean!
+    }
+
+    input UpdateParentContactOptionInput {
+        key: String!
+        value: Int!
+    }
+
+    type UpdateParentContactOptionPayload {
+        msg: String!
+        status: Boolean!
+    }
+
+    type ParentContactOptions {
+        accept_email: Int!
+        accept_notification: Int!
     }
 
     type ParentGlobal {
