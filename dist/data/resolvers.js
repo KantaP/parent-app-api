@@ -443,7 +443,8 @@ var resolvers = {
                                         model: schoolDB.ParentPassenger,
                                         where: {
                                             parent_id: parentData.get().parent_id
-                                        }
+                                        },
+                                        order: [['first_name', 'ASC']]
                                     }]
                                 });
 
@@ -574,7 +575,7 @@ var resolvers = {
                                     return item.get();
                                 }) : [];
                                 journeyData.collection_address.time_start = (0, _moment2.default)(journeyData.collection_address.time_start, 'HH:mm:ss').format('HH:mm');
-                                datetime_start = (0, _moment2.default)(journeyData.collection_address.date_start + ' ' + journeyData.collection_address.time_start, 'YYYY-MM-DD HH:mm').utc();
+                                datetime_start = (0, _moment2.default)(journeyData.collection_address.date_start + ' ' + journeyData.collection_address.time_start, 'YYYY-MM-DD HH:mm').subtract(2, 'hour').utc();
                                 datetime_end = (0, _moment2.default)(journeyData.destination_address.date_start + ' ' + journeyData.destination_address.time_end, 'YYYY-MM-DD HH:mm').utc();
 
                                 if ((0, _moment2.default)().isBetween(datetime_start, datetime_end)) {

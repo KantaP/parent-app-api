@@ -258,7 +258,10 @@ const resolvers = {
                             model: schoolDB.ParentPassenger,
                             where: {
                                 parent_id: parentData.get().parent_id
-                            }
+                            },
+                            order: [
+                                ['first_name', 'ASC']
+                            ]
                         }]
                     })
                     var accountData = await schoolDB.Account.find({
@@ -322,7 +325,7 @@ const resolvers = {
                                 journeyData.collection_address.passenger_log = (col_passenger_log.length > 0) ? col_passenger_log.map((item) => item.get()) : []
                                 journeyData.destination_address.passenger_log = (des_passenger_log) ? des_passenger_log.map((item) => item.get()) : []
                                 journeyData.collection_address.time_start = moment(journeyData.collection_address.time_start, 'HH:mm:ss').format('HH:mm')
-                                var datetime_start = moment(`${journeyData.collection_address.date_start} ${journeyData.collection_address.time_start}`, 'YYYY-MM-DD HH:mm').utc()
+                                var datetime_start = moment(`${journeyData.collection_address.date_start} ${journeyData.collection_address.time_start}`, 'YYYY-MM-DD HH:mm').subtract(2, 'hour').utc()
                                 var datetime_end = moment(`${journeyData.destination_address.date_start} ${journeyData.destination_address.time_end}`, 'YYYY-MM-DD HH:mm').utc()
                                 if (moment().isBetween(datetime_start, datetime_end)) {
                                     journeyData.peroid = 'current'
