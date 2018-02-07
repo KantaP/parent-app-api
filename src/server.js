@@ -43,7 +43,7 @@ passport.use(new BearerStrategy(
             return cb(err.message)
         }
     }));
-const GRAPHQL_PORT = 3000;
+const GRAPHQL_PORT = 3001;
 
 const graphQLServer = express();
 graphQLServer.use(session({

@@ -36,14 +36,14 @@ passport.use('local', new LocalStrategy(
             var companiesLogo = []
             for (let i = 0; i < databases.length; i++) {
                 var DB = sequelizeInitial(databases[i]);
-                console.log(databases[i])
+                // console.log(databases[i])
                 var account = await DB.Parent.find({
-                    attributes: ['account'],
-                    where: {
-                        email: parentGlobal.get().email
-                    }
-                })
-                console.log(account)
+                        attributes: ['account'],
+                        where: {
+                            email: parentGlobal.get().email
+                        }
+                    })
+                    // console.log(account)
                 if (account != null) {
                     var companyLogo = await DB.Account.find({
                         attributes: ['name', 'company_logo'],
